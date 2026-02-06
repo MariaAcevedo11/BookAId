@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import { useRef, useState } from "react";
+
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+  const [status, setStatus] = useState<Status>("idle");
+  const [recommendations, setRecommendations] = useState<any[]>([]);
 
   const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -16,12 +19,13 @@ export default function Home() {
   };
 
   const takePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    setStatus("loading");
+    setRecommendations([]);
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
-
-    if (!video || !canvas) return;
-
-    setStatus("loading"); 
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -41,19 +45,22 @@ export default function Home() {
           body: formData,
         });
 
-        if (!res.ok) throw new Error("Error en backend");
+        if (!res.ok) throw new Error("Request failed");
 
-        setStatus("done"); 
-      } catch (error) {
-        console.error(error);
-        setStatus("idle");
+        const data = await res.json();
+
+        setRecommendations(data.recommendations);
+        setStatus("success");
+      } catch (err) {
+        console.error(err);
+        setStatus("error");
       }
     }, "image/jpeg");
   };
 
   return (
     <main style={{ padding: 20 }}>
-      <h1>BookAId</h1>
+      <h1>📚 Book Recommender</h1>
 
       <video
         ref={videoRef}
@@ -67,21 +74,26 @@ export default function Home() {
       <div style={{ marginTop: 10 }}>
         <button onClick={startCamera}>Open Camera</button>
         <button onClick={takePhoto} style={{ marginLeft: 10 }}>
-          Take Photo
+          Scan Book
         </button>
       </div>
 
-      
-      {status === "idle" && (
-        <p style={{ color: "#888" }}>Take a photo of your book</p>
-      )}
+      {status === "loading" && <p>Scanning and analyzing…</p>}
+      {status === "error" && <p>Something went wrong</p>}
 
-      {status === "loading" && (
-        <p style={{ color: "#0070f3" }}>Analizing...</p>
-      )}
+      {status === "success" && (
+        <div style={{ marginTop: 20 }}>
+          <h2>📖 Recommended Books</h2>
 
-      {status === "done" && (
-        <p style={{ color: "green" }}>Page Analized</p>
+          <ul>
+            {recommendations.map((rec, idx) => (
+              <li key={idx}>
+                <strong>{rec.title}</strong> — score:{" "}
+                {Number(rec.score).toFixed(3)}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </main>
   );

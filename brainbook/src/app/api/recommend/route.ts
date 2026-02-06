@@ -6,24 +6,30 @@ export async function POST(req: Request) {
 
   if (!image || !(image instanceof File)) {
     return NextResponse.json(
-      { error: "Image was not received" },
-      { status: 400 },
+      { error: "No image received" },
+      { status: 400 }
     );
   }
 
-  
   const ocrFormData = new FormData();
   ocrFormData.append("file", image);
-  
-  const ocrServiceUrl = process.env.OCR_SERVICE_URL;
-  const ocrResponse = await fetch(`${ocrServiceUrl}/ocr`, {
+
+  const response = await fetch(process.env.OCR_SERVICE_URL!, {
     method: "POST",
     body: ocrFormData,
   });
 
-  if (!ocrResponse.ok) {
-    return NextResponse.json({ error: "Error service OCR" }, { status: 500 });
+  if (!response.ok) {
+    return NextResponse.json(
+      { error: "OCR service failed" },
+      { status: 500 }
+    );
   }
 
-  return NextResponse.json({ success: true });
+  const data = await response.json();
+  console.log("FASTAPI RAW RESPONSE:", data);
+
+  return NextResponse.json({
+    recommendations: data.recommendations,
+  });
 }
