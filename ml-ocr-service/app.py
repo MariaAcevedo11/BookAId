@@ -1,12 +1,19 @@
 from fastapi import FastAPI, File, UploadFile
 from PIL import Image, ImageEnhance
+from dotenv import load_dotenv
 import pytesseract
 import io
 import re
+import os 
+
+load_dotenv() 
 
 app = FastAPI(title = "OCR Service")
 
-pytesseract.pytesseract.tesseract_cmd = (r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+tesseract_path = os.getenv("TESSERACT_CMD_PATH")
+if tesseract_path:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_path
+
 
 @app.post("/ocr")
 
