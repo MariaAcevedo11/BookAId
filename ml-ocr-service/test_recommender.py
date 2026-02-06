@@ -1,4 +1,6 @@
+
 from recommender import BookRecommender
+
 
 def main():
     recommender = BookRecommender()
@@ -6,7 +8,7 @@ def main():
     test_queries = [
         "harry potter magic wizard school",
         "medieval fantasy dragons swords",
-        "world war history europe",
+        "kids in a farm",
         "science fiction space future robots"
     ]
 
