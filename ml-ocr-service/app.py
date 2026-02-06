@@ -1,36 +1,41 @@
 from fastapi import FastAPI, File, UploadFile
-from PIL import Image, ImageEnhance
-from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
 import pytesseract
 import io
-import re
-import os 
+import os
+from dotenv import load_dotenv
 
-load_dotenv() 
+from recommender import BookRecommender
 
-app = FastAPI(title = "OCR Service")
+load_dotenv()
 
-tesseract_path = os.getenv("TESSERACT_CMD_PATH")
-if tesseract_path:
-    pytesseract.pytesseract.tesseract_cmd = tesseract_path
+pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSERACT_CMD_PATH")
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-@app.post("/ocr")
+recommender = BookRecommender()
 
-async def ocr_image(file: UploadFile = File(...)):
+
+@app.post("/recommend")
+async def recommend(file: UploadFile = File(...)):
+    # --- OCR ---
     image_bytes = await file.read()
-    image = Image.open(io.BytesIO(image_bytes)).convert("L")
-    
-    
-    enhacner = ImageEnhance.Contrast(image)
-    image = enhacner.enhance(2)
-    
-    text = pytesseract.image_to_string(image, lang = "eng+spa+por")
-    
-    text = re.sub(r"[^a-zA-Z0-9\s]", "", text)
-    text = " ".join(text.split())
+    image = Image.open(io.BytesIO(image_bytes))
+    ocr_text = pytesseract.image_to_string(image)
+
+    # --- Recommendation ---
+    recommendations = recommender.recommend(ocr_text)
 
     return {
-        "text": text
+        "query": ocr_text.strip(),
+        "recommendations": recommendations
     }
-    
