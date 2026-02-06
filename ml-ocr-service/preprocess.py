@@ -2,20 +2,15 @@ import json
 from pathlib import Path
 import re
 
-
-RAW_PATH = Path("data/raw/openlibrary_raw.json")
+RAW_PATH = Path("data/raw/openlibrary_raw.json") 
 PROCESSED_PATH = Path("data/processed/books_clean.json")
 
-
 def normalize_text(text: str) -> str:
-    """
-    Lowercase, remove special characters, normalize whitespace.
-    """
     text = text.lower()
-    text = re.sub(r"[^a-z0-9\s]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"<.*?>", " ", text) 
+    text = re.sub(r"[^a-z\s]", " ", text)  
+    text = re.sub(r"\s+", " ", text).strip()  
     return text
-
 
 def preprocess():
     with open(RAW_PATH, "r", encoding="utf-8") as f:
@@ -25,19 +20,25 @@ def preprocess():
 
     for book in raw_books:
         title = book.get("title", "").strip()
-        subjects = book.get("subject", [])
+        subjects = book.get("subject", [])  # cambio aquí
 
         if not title or not subjects:
             continue
 
         subject_text = " ".join(subjects)
 
-        combined_text = f"{title} {subject_text}"
+        description = book.get("description", "")
+        if not description:
+            description = ""
+
+        combined_text = f"{title} {subject_text} {description}"
         combined_text = normalize_text(combined_text)
 
         processed_books.append({
             "id": book.get("key"),
             "title": title,
+            "description": description,
+            "source_subject": book.get("source_subject", ""),
             "text": combined_text
         })
 
