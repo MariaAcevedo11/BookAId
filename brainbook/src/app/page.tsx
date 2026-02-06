@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRef } from "react";
+import React, { useState, useRef } from "react";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [message, setMessage] = useState("");
+
+  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
 
   const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -21,6 +21,8 @@ export default function Home() {
 
     if (!video || !canvas) return;
 
+    setStatus("loading"); 
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
@@ -33,19 +35,25 @@ export default function Home() {
       const formData = new FormData();
       formData.append("image", blob, "book.jpg");
 
-      const res = await fetch("/api/recommend", {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        const res = await fetch("/api/recommend", {
+          method: "POST",
+          body: formData,
+        });
 
-      const data = await res.json();
-      setMessage(data.message);
+        if (!res.ok) throw new Error("Error en backend");
+
+        setStatus("done"); 
+      } catch (error) {
+        console.error(error);
+        setStatus("idle");
+      }
     }, "image/jpeg");
   };
 
-   return (
+  return (
     <main style={{ padding: 20 }}>
-      <h1>📚 Recomendador de Libros</h1>
+      <h1>BookAId</h1>
 
       <video
         ref={videoRef}
@@ -63,7 +71,18 @@ export default function Home() {
         </button>
       </div>
 
-      {message && <p>{message}</p>}
+      
+      {status === "idle" && (
+        <p style={{ color: "#888" }}>Take a photo of your book</p>
+      )}
+
+      {status === "loading" && (
+        <p style={{ color: "#0070f3" }}>Analizing...</p>
+      )}
+
+      {status === "done" && (
+        <p style={{ color: "green" }}>Page Analized</p>
+      )}
     </main>
   );
 }
