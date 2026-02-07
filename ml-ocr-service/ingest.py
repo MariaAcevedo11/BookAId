@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 BASE_URL = os.getenv("BASE_URL")
 OUTPUT_PATH = Path(os.getenv("OUTPUT_PATH", "data/raw/openlibrary_raw.json"))
 
-# Use a set to avoid duplicate subjects
+
 SUBJECTS = list(set([
     "arts",
     "architecture",

@@ -84,15 +84,18 @@ export default function Home() {
       {status === "success" && (
         <div style={{ marginTop: 20 }}>
           <h2>📖 Recommended Books</h2>
-
-          <ul>
-            {recommendations.map((rec, idx) => (
-              <li key={idx}>
-                <strong>{rec.title}</strong> — score:{" "}
-                {Number(rec.score).toFixed(3)}
-              </li>
-            ))}
-          </ul>
+          {recommendations.length === 0 ? (
+            <p>No recommendations found.</p>
+          ) : (
+            <ul>
+              {recommendations.map((rec, idx) => (
+                <li key={idx}>
+                  <strong>{rec.title}</strong> — score:{" "}
+                  {Number(rec.score).toFixed(3)}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </main>
