@@ -5,7 +5,6 @@ import pytesseract
 import io
 import os
 from dotenv import load_dotenv
-
 from recommender import BookRecommender
 
 load_dotenv()
